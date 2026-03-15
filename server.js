@@ -20,11 +20,11 @@ app.use('/', transacoesRoutes);
 app.use('/', metasRoutes); 
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.use((req, res) => {
-    res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.status(404).sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 app.listen(PORTA, () => { 
