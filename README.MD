@@ -115,4 +115,4 @@ O **Finance Dashboard Pro** é um sistema Full-Stack robusto de gestão financei
 
 ---
 
-Developed with ❤️ by [Seu Nome](https://github.com/M3nriquez).
+Developed with ❤️ by [Henrique](https://github.com/M3nriquez).
