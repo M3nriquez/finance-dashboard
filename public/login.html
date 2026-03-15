@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar - Painel Corporativo</title>
+    <link rel="stylesheet" href="/estilo-auth.css">
+    <style>
+        .topo-auth { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .seletor-idioma-auth { padding: 6px; border-radius: 6px; border: 1px solid #e5e7eb; outline: none; font-family: 'Inter'; background: white; cursor: pointer; color: #374151; }
+        .btn-principal:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        /* NOVO: Estilo do Banner de Alerta embutido na caixa */
+        .banner-alerta {
+            display: none; /* Fica escondido até precisarmos dele */
+            padding: 12px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 14px;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: surgir 0.3s ease-out;
+        }
+        
+        /* Animação suave descendo */
+        @keyframes surgir {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="caixa-auth">
+        <div class="topo-auth">
+            <select id="seletorIdioma" class="seletor-idioma-auth">
+                <option value="pt">🇧🇷 PT</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="es">🇪🇸 ES</option>
+            </select>
+        </div>
+
+        <div id="bannerAlerta" class="banner-alerta"></div>
+
+        <h2 data-i18n="tituloLogin">Bem-vindo de volta 👋</h2>
+        
+        <form id="formLogin" class="formulario" onsubmit="return false;">
+            <input type="email" id="email" data-i18n-placeholder="placeholderEmail" placeholder="Seu E-mail" required>
+            <input type="password" id="senha" data-i18n-placeholder="placeholderSenha" placeholder="Sua Senha" required>
+            <button type="submit" id="btnEntrar" class="btn-principal" data-i18n="btnEntrar">Entrar no Painel</button>
+        </form>
+        
+        <a href="/cadastro.html" class="link-rodape" data-i18n="linkCadastro" style="margin-top: 24px; display: block;">Ainda não tem conta? Cadastre-se</a>
+    </div>
+
+    <script>
+        // NOVO: Dicionário atualizado com as mensagens de erro do Banco de Dados!
+        const dicionarioAuth = {
+            pt: { tituloLogin: "Bem-vindo de volta 👋", placeholderEmail: "Seu E-mail", placeholderSenha: "Sua Senha", btnEntrar: "Entrar no Painel", linkCadastro: "Ainda não tem conta? Cadastre-se", erroConexao: "Erro ao conectar com o servidor.", btnCarregando: "⏳ Aguarde...", msgSucesso: "Login aprovado!", "Usuário não encontrado.": "Usuário não encontrado.", "Senha incorreta.": "Senha incorreta." },
+            en: { tituloLogin: "Welcome back 👋", placeholderEmail: "Your Email", placeholderSenha: "Your Password", btnEntrar: "Enter Dashboard", linkCadastro: "Don't have an account? Register", erroConexao: "Error connecting to server.", btnCarregando: "⏳ Please wait...", msgSucesso: "Login successful!", "Usuário não encontrado.": "User not found.", "Senha incorreta.": "Incorrect password." },
+            es: { tituloLogin: "Bienvenido de nuevo 👋", placeholderEmail: "Tu Correo", placeholderSenha: "Tu Contraseña", btnEntrar: "Entrar al Panel", linkCadastro: "¿Aún no tienes cuenta? Regístrate", erroConexao: "Error al conectar con el servidor.", btnCarregando: "⏳ Espere...", msgSucesso: "¡Inicio de sesión aprobado!", "Usuário não encontrado.": "Usuario no encontrado.", "Senha incorreta.": "Contraseña incorrecta." }
+        };
+
+        let idiomaAtual = localStorage.getItem('idiomaPreferido') || 'pt';
+        document.getElementById('seletorIdioma').value = idiomaAtual;
+
+        function mostrarAlerta(mensagem, tipo = 'sucesso') {
+            const banner = document.getElementById('bannerAlerta');
+            banner.innerText = mensagem;
+            banner.style.background = tipo === 'sucesso' ? '#10b981' : '#ef4444';
+            banner.style.display = 'block';
+            setTimeout(() => { banner.style.display = 'none'; }, 3500);
+        }
+
+        function aplicarIdioma() {
+            const textos = dicionarioAuth[idiomaAtual];
+            document.querySelectorAll('[data-i18n]').forEach(el => { el.innerText = textos[el.getAttribute('data-i18n')]; });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = textos[el.getAttribute('data-i18n-placeholder')]; });
+        }
+
+        document.getElementById('seletorIdioma').addEventListener('change', (evento) => { idiomaAtual = evento.target.value; localStorage.setItem('idiomaPreferido', idiomaAtual); aplicarIdioma(); });
+        aplicarIdioma();
+
+        document.getElementById('btnEntrar').addEventListener('click', async function(evento) {
+            evento.preventDefault(); 
+            const email = document.getElementById('email').value;
+            const senha = document.getElementById('senha').value;
+            const btn = document.getElementById('btnEntrar');
+            const textos = dicionarioAuth[idiomaAtual];
+
+            if(!email || !senha) return;
+
+            btn.disabled = true;
+            btn.innerText = textos.btnCarregando;
+
+            try {
+                const resposta = await fetch('/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, senha: senha }) 
+                });
+                const dados = await resposta.json();
+                
+                if (resposta.ok) {
+                    mostrarAlerta(textos.msgSucesso, 'sucesso');
+                    localStorage.setItem('tokenJWT', dados.token);
+                    setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
+                } else {
+                    // MÁGICA DA TRADUÇÃO: Busca o erro do servidor no dicionário. Se não achar, mostra o original.
+                    const erroTraduzido = textos[dados.erro] || dados.erro;
+                    mostrarAlerta(erroTraduzido, 'erro');
+                    
+                    // CORREÇÃO: Força o destravamento do botão IMEDIATAMENTE após o erro!
+                    btn.disabled = false;
+                    btn.innerText = textos.btnEntrar;
+                }
+            } catch (erro) {
+                mostrarAlerta(textos.erroConexao, 'erro');
+                
+                // CORREÇÃO: Destrava o botão aqui também
+                btn.disabled = false;
+                btn.innerText = textos.btnEntrar;
+            }
+        });
+    </script>
+</body>
+</html>

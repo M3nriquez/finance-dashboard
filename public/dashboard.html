@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Financeiro Empresarial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --bg-fundo: #f3f4f6; --bg-cartao: #ffffff; --texto-principal: #1f2937; --texto-secundario: #6b7280; --borda: #e5e7eb; --verde: #10b981; --vermelho: #ef4444; --azul: #4f46e5; }
+        body.dark { --bg-fundo: #111827; --bg-cartao: #1f2937; --texto-principal: #f9fafb; --texto-secundario: #9ca3af; --borda: #374151; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-fundo); color: var(--texto-principal); padding-bottom: 40px; transition: 0.3s; }
+        .header { background: var(--bg-cartao); border-bottom: 1px solid var(--borda); padding: 20px 0; margin-bottom: 30px; transition: 0.3s; }
+        .header-content { max-width: 1000px; margin: auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .controles-topo { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .seletor-idioma, .seletor-filtro { background: var(--bg-fundo); color: var(--texto-principal); border: 1px solid var(--borda); padding: 8px; border-radius: 6px; font-family: 'Inter'; outline: none; cursor: pointer; }
+        .btn-tema, .btn-sair { background: transparent; color: var(--texto-principal); border: 1px solid var(--borda); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-family: 'Inter'; }
+        .btn-tema:hover, .btn-sair:hover { background: var(--borda); }
+        .container { max-width: 1000px; margin: auto; padding: 0 20px; }
+        .painel-executivo { background: var(--bg-cartao); padding: 24px; border-radius: 12px; border: 1px solid var(--borda); margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px; border-left: 5px solid var(--azul); }
+        .insight-info { display: flex; flex-direction: column; gap: 4px; }
+        .insight-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--texto-secundario); }
+        .insight-valor { font-size: 28px; font-weight: 700; color: var(--texto-principal); margin: 0; display: flex; align-items: center; gap: 10px; }
+        .btn-exportar { background: var(--verde); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: 'Inter'; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-exportar:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); }
+        .cards-resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+        .card-mini { background: var(--bg-cartao); padding: 20px; border-radius: 12px; border: 1px solid var(--borda); text-align: center; }
+        .card-mini p { color: var(--texto-secundario); font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+        .card-mini h3 { font-size: 24px; font-weight: 700; }
+        .painel-superior { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+        @media (max-width: 768px) { .painel-superior, .cards-resumo { grid-template-columns: 1fr; } }
+        .card { background: var(--bg-cartao); padding: 24px; border-radius: 12px; border: 1px solid var(--borda); }
+        .card h3 { margin-bottom: 16px; font-size: 18px; font-weight: 600; border-bottom: 1px solid var(--borda); padding-bottom: 12px; }
+        .formulario { display: flex; flex-direction: column; gap: 12px; }
+        input, select { padding: 12px; background: var(--bg-fundo); color: var(--texto-principal); border: 1px solid var(--borda); border-radius: 8px; outline: none; font-family: 'Inter'; }
+        input:focus, select:focus { border-color: var(--azul); }
+        input[type="file"] { padding: 8px; background: var(--bg-cartao); cursor: pointer; }
+        input[type="file"]::file-selector-button { background: var(--bg-fundo); color: var(--texto-principal); border: 1px solid var(--borda); padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-right: 10px; font-family: 'Inter'; font-weight: 500; }
+        .btn-add { background: var(--azul); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn-add:hover { opacity: 0.9; }
+        .area-grafico { display: flex; justify-content: center; align-items: center; min-height: 250px; width: 100%; }
+        canvas { max-width: 100%; max-height: 250px; }
+        .meta-card { border: 1px solid var(--borda); padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+        .meta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .meta-botoes { display: flex; gap: 8px; }
+        .btn-acao-meta { background: transparent; color: var(--texto-principal); border: 1px dashed var(--borda); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-acao-meta:hover { background: var(--borda); }
+        .barra-fundo { width: 100%; height: 12px; background-color: var(--borda); border-radius: 6px; overflow: hidden; margin-top: 8px; }
+        .barra-progresso { height: 100%; background-color: var(--azul); width: 0%; transition: 0.5s; }
+        .lista { list-style: none; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--borda); }
+        .item:last-child { border-bottom: none; }
+        .item-titulo { font-weight: 500; display: flex; align-items: center; gap: 8px;}
+        .tag-categoria { background: var(--bg-fundo); border: 1px solid var(--borda); padding: 2px 8px; border-radius: 12px; font-size: 11px; color: var(--texto-secundario); font-weight: 600; }
+        .item-data { font-size: 13px; color: var(--texto-secundario); display: block; margin-top: 4px; }
+        .item-acoes { display: flex; align-items: center; gap: 16px; }
+        .valor { font-weight: 600; font-size: 16px; }
+        .receita { color: var(--verde); } 
+        .despesa { color: var(--vermelho); } 
+        .btn-deletar { background: rgba(239, 68, 68, 0.1); color: var(--vermelho); border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-deletar:hover { background: var(--vermelho); color: white; }
+        .btn-carregar { display: block; margin: 20px auto 0; background: transparent; color: var(--texto-principal); border: 1px solid var(--borda); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 500; font-family: 'Inter'; transition: 0.2s; }
+        .btn-carregar:hover { background: var(--borda); }
+        .header-historico { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--borda); padding-bottom: 12px; }
+        .header-historico h3 { border: none; padding: 0; margin: 0; }
+        .miniatura-foto { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--borda); cursor: pointer; transition: 0.2s; }
+        .miniatura-foto:hover { transform: scale(1.1); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .info-principal-item { display: flex; align-items: center; gap: 12px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-content">
+            <h2 data-i18n="tituloPainel">📊 Painel Corporativo</h2>
+            <div class="controles-topo">
+                
+                <select id="filtroMesGlobal" class="seletor-filtro">
+                    <option value="1" data-i18n="mes1">Janeiro</option>
+                    <option value="2" data-i18n="mes2">Fevereiro</option>
+                    <option value="3" data-i18n="mes3">Março</option>
+                    <option value="4" data-i18n="mes4">Abril</option>
+                    <option value="5" data-i18n="mes5">Maio</option>
+                    <option value="6" data-i18n="mes6">Junho</option>
+                    <option value="7" data-i18n="mes7">Julho</option>
+                    <option value="8" data-i18n="mes8">Agosto</option>
+                    <option value="9" data-i18n="mes9">Setembro</option>
+                    <option value="10" data-i18n="mes10">Outubro</option>
+                    <option value="11" data-i18n="mes11">Novembro</option>
+                    <option value="12" data-i18n="mes12">Dezembro</option>
+                </select>
+                <select id="filtroAnoGlobal" class="seletor-filtro">
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+
+                <select id="seletorIdioma" class="seletor-idioma">
+                    <option value="pt">🇧🇷 PT</option>
+                    <option value="en">🇺🇸 EN</option>
+                    <option value="es">🇪🇸 ES</option>
+                </select>
+                <button id="btnTema" class="btn-tema" data-i18n="btnTemaClaro">☀️ Claro</button>
+                <button id="btnSair" class="btn-sair" data-i18n="btnSair">Sair</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="painel-executivo">
+            <div class="insight-info">
+                <span class="insight-label" data-i18n="lblMargem">Margem de Lucro Bruto</span>
+                <h2 class="insight-valor" id="txtMargemLucro">0%</h2>
+            </div>
+            <button id="btnExportarCsv" class="btn-exportar">📄 <span data-i18n="btnExportar">Exportar Relatório (CSV)</span></button>
+        </div>
+
+        <div class="cards-resumo">
+            <div class="card-mini">
+                <p data-i18n="cardEntradas">Faturamento (Entradas)</p>
+                <h3 id="txtArrecadado" class="receita">$ 0.00</h3>
+            </div>
+            <div class="card-mini">
+                <p data-i18n="cardSaidas">Custos (Saídas)</p>
+                <h3 id="txtGasto" class="despesa">$ 0.00</h3>
+            </div>
+            <div class="card-mini">
+                <p data-i18n="cardSaldo">Caixa Atual</p>
+                <h3 id="txtSaldo">$ 0.00</h3>
+            </div>
+        </div>
+
+        <div class="painel-superior">
+            <div class="card">
+                <h3 data-i18n="tituloNovaTransacao">Novo Lançamento</h3>
+                <form id="formTransacao" class="formulario" onsubmit="return false;">
+                    <input type="text" id="descricao" data-i18n-placeholder="placeholderDesc" placeholder="Ex: Pagamento Fornecedor" required>
+                    <input type="number" id="valor" data-i18n-placeholder="placeholderValor" placeholder="Valor" step="0.01" required>
+                    <select id="tipo" onchange="atualizarCategoriasNoForm()">
+                        <option value="despesa" data-i18n="optDespesa">Despesa</option>
+                        <option value="receita" data-i18n="optReceita">Receita</option>
+                    </select>
+                    <select id="categoria"></select>
+                    <label style="font-size: 14px; color: var(--texto-secundario); font-weight: 500;" data-i18n="lblComprovante">Comprovante / Nota Fiscal:</label>
+                    <input type="file" id="comprovante" accept="image/png, image/jpeg, image/jpg">
+                    <button type="submit" id="btnAdd" class="btn-add" data-i18n="btnAdicionar">Registrar</button>
+                </form>
+            </div>
+            <div class="card">
+                <h3 data-i18n="tituloResumoMes">Centro de Custos (Despesas)</h3>
+                <div class="area-grafico">
+                    <canvas id="meuGrafico"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--borda); padding-bottom: 12px; margin-bottom: 16px;">
+                <h3 style="border: none; padding: 0; margin: 0;" data-i18n="tituloMetas">Metas da Empresa</h3>
+                <button id="btnNovaMeta" class="btn-add" style="padding: 8px 16px; margin: 0; font-size: 14px;" data-i18n="btnCriarMeta">+ Nova Meta</button>
+            </div>
+            <div id="listaMetas"></div>
+        </div>
+
+        <div class="card">
+            <div class="header-historico">
+                <h3 data-i18n="tituloHistorico">Livro Caixa (Histórico)</h3>
+                <select id="filtroCategoria" class="seletor-filtro" onchange="carregarTransacoes(1, true)">
+                    <option value="todas" data-i18n="catTodas">Todas as Categorias</option>
+                    <optgroup label="Despesas" data-i18n-label="optDespesa">
+                        <option value="Alimentação" data-i18n="catAlimentacao">Alimentação</option>
+                        <option value="Carro/Transporte" data-i18n="catCarro">Veículos/Transporte</option>
+                        <option value="Moradia" data-i18n="catMoradia">Infraestrutura</option>
+                        <option value="Lazer" data-i18n="catLazer">Eventos Corporativos</option>
+                        <option value="Outros Gastos" data-i18n="catOutrosGastos">Outros Custos</option>
+                    </optgroup>
+                    <optgroup label="Receitas" data-i18n-label="optReceita">
+                        <option value="Salário" data-i18n="catSalario">Serviços</option>
+                        <option value="Vendas" data-i18n="catVendas">Vendas de Produtos</option>
+                        <option value="Investimento" data-i18n="catInvestimento">Aportes/Investimentos</option>
+                        <option value="Outras Entradas" data-i18n="catOutrasEntradas">Outras Receitas</option>
+                    </optgroup>
+                </select>
+            </div>
+            <ul id="listaTransacoes" class="lista"></ul>
+            <button id="btnCarregarMais" class="btn-carregar" style="display: none;" data-i18n="btnCarregarMais">Carregar mais antigos ⬇️</button>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        const dicionario = {
+            pt: { tituloPainel: "📊 Painel Corporativo", btnSair: "Sair", cardEntradas: "Faturamento", cardSaidas: "Custos", cardSaldo: "Caixa Atual", tituloNovaTransacao: "Novo Lançamento", placeholderDesc: "Ex: Pagamento Fornecedor", placeholderValor: "Valor", optReceita: "Receita", optDespesa: "Despesa", btnAdicionar: "Registrar", tituloResumoMes: "Centro de Custos (Despesas)", tituloMetas: "Metas da Empresa", btnCriarMeta: "+ Nova Meta", tituloHistorico: "Livro Caixa (Histórico)", lblEntrada: "Entrada", lblSaida: "Saída", lblComprovante: "Comprovante:", btnGuardar: "+ Alocar $", btnEditar: "Editar", moeda: "R$", msgSemTransacao: "Nenhum lançamento.", msgSemMetas: "Nenhuma meta definida.", btnTemaEscuro: "🌙 Escuro", btnTemaClaro: "☀️ Claro", btnCarregarMais: "Carregar mais antigos ⬇️", lblMargem: "Margem de Lucro", btnExportar: "Exportar (CSV)", btnCarregando: "⏳ Aguarde...", msgAviso: "Preencha todos os campos.", msgErroExportar: "Vazio.", msgSucesso: "Operação realizada!", catTodas: "Todas as Categorias", catSemCategoria: "Sem Categoria", catAlimentacao: "Alimentação", catCarro: "Veículos/Transporte", catMoradia: "Infraestrutura", catLazer: "Eventos Corporativos", catOutrosGastos: "Outros Custos", catSalario: "Serviços", catVendas: "Vendas de Produtos", catInvestimento: "Aportes/Investimentos", catOutrasEntradas: "Outras Receitas", mes1: "Janeiro", mes2: "Fevereiro", mes3: "Março", mes4: "Abril", mes5: "Maio", mes6: "Junho", mes7: "Julho", mes8: "Agosto", mes9: "Setembro", mes10: "Outubro", mes11: "Novembro", mes12: "Dezembro" },
+            en: { tituloPainel: "📊 Corporate Dashboard", btnSair: "Logout", cardEntradas: "Revenue", cardSaidas: "Costs", cardSaldo: "Cash Flow", tituloNovaTransacao: "New Entry", placeholderDesc: "E.g. Supplier Payment", placeholderValor: "Amount", optReceita: "Income", optDespesa: "Expense", btnAdicionar: "Record", tituloResumoMes: "Cost Center (Expenses)", tituloMetas: "Company Goals", btnCriarMeta: "+ New Goal", tituloHistorico: "Ledger (History)", lblEntrada: "Credit", lblSaida: "Debit", lblComprovante: "Receipt:", btnGuardar: "+ Allocate $", btnEditar: "Edit", moeda: "$", msgSemTransacao: "No entries.", msgSemMetas: "No goals.", btnTemaEscuro: "🌙 Dark", btnTemaClaro: "☀️ Light", btnCarregarMais: "Load older ⬇️", lblMargem: "Profit Margin", btnExportar: "Export (CSV)", btnCarregando: "⏳ Wait...", msgAviso: "Fill all fields.", msgErroExportar: "Empty.", msgSucesso: "Success!", catTodas: "All Categories", catSemCategoria: "Uncategorized", catAlimentacao: "Food", catCarro: "Vehicles/Transport", catMoradia: "Infrastructure", catLazer: "Corporate Events", catOutrosGastos: "Other Costs", catSalario: "Services", catVendas: "Product Sales", catInvestimento: "Investments", catOutrasEntradas: "Other Revenue", mes1: "January", mes2: "February", mes3: "March", mes4: "April", mes5: "May", mes6: "June", mes7: "July", mes8: "August", mes9: "September", mes10: "October", mes11: "November", mes12: "December" },
+            es: { tituloPainel: "📊 Panel Corporativo", btnSair: "Salir", cardEntradas: "Ingresos", cardSaidas: "Costos", cardSaldo: "Flujo de Caja", tituloNovaTransacao: "Nueva Entrada", placeholderDesc: "Ej: Pago Proveedor", placeholderValor: "Monto", optReceita: "Ingreso", optDespesa: "Gasto", btnAdicionar: "Registrar", tituloResumoMes: "Centro de Costos (Gastos)", tituloMetas: "Metas de la Empresa", btnCriarMeta: "+ Nueva Meta", tituloHistorico: "Libro Mayor", lblEntrada: "Crédito", lblSaida: "Débito", lblComprovante: "Recibo:", btnGuardar: "+ Asignar $", btnEditar: "Editar", moeda: "$", msgSemTransacao: "No hay registros.", msgSemMetas: "No hay metas.", btnTemaEscuro: "🌙 Oscuro", btnTemaClaro: "☀️ Claro", btnCarregarMais: "Cargar más antiguos ⬇️", lblMargem: "Margen", btnExportar: "Exportar (CSV)", btnCarregando: "⏳ Espere...", msgAviso: "Rellene todo.", msgErroExportar: "Vacío.", msgSucesso: "¡Éxito!", catTodas: "Todas las Categorías", catSemCategoria: "Sin Categoría", catAlimentacao: "Alimentación", catCarro: "Vehículos/Transporte", catMoradia: "Infraestructura", catLazer: "Eventos", catOutrosGastos: "Otros Costos", catSalario: "Servicios", catVendas: "Ventas", catInvestimento: "Inversiones", catOutrasEntradas: "Otros Ingresos", mes1: "Enero", mes2: "Febrero", mes3: "Marzo", mes4: "Abril", mes5: "Mayo", mes6: "Junio", mes7: "Julio", mes8: "Agosto", mes9: "Septiembre", mes10: "Octubre", mes11: "Noviembre", mes12: "Diciembre" }
+        };
+
+        const mapaTraducoesCat = { 'Alimentação': 'catAlimentacao', 'Carro/Transporte': 'catCarro', 'Moradia': 'catMoradia', 'Lazer': 'catLazer', 'Outros Gastos': 'catOutrosGastos', 'Salário': 'catSalario', 'Vendas': 'catVendas', 'Investimento': 'catInvestimento', 'Outras Entradas': 'catOutrasEntradas' };
+        const listasDeCategorias = { receita: ['Salário', 'Vendas', 'Investimento', 'Outras Entradas'], despesa: ['Alimentação', 'Carro/Transporte', 'Moradia', 'Lazer', 'Outros Gastos'] };
+
+        function atualizarCategoriasNoForm() {
+            const tipoSelecionado = document.getElementById('tipo').value;
+            const selectCategoria = document.getElementById('categoria');
+            selectCategoria.innerHTML = ''; 
+            const textos = dicionario[idiomaAtual];
+            listasDeCategorias[tipoSelecionado].forEach(catRaw => {
+                const chaveTraducao = mapaTraducoesCat[catRaw];
+                selectCategoria.innerHTML += `<option value="${catRaw}">${textos[chaveTraducao]}</option>`;
+            });
+        }
+
+        let idiomaAtual = localStorage.getItem('idiomaPreferido') || 'pt';
+        document.getElementById('seletorIdioma').value = idiomaAtual;
+        const tokenJWT = localStorage.getItem('tokenJWT');
+        if (!tokenJWT) { window.location.href = '/login.html'; }
+        
+        // NOVO: Pegando os valores da "Máquina do Tempo"
+        const selectMes = document.getElementById('filtroMesGlobal');
+        const selectAno = document.getElementById('filtroAnoGlobal');
+        
+        // Inicia o filtro com o mês e ano atual do computador
+        const dataHoje = new Date();
+        selectMes.value = dataHoje.getMonth() + 1; 
+        selectAno.value = dataHoje.getFullYear();
+
+        // Se o usuário mexer no tempo, recarrega o painel inteiro
+        selectMes.addEventListener('change', () => { carregarResumoGlobal(); carregarTransacoes(1, true); });
+        selectAno.addEventListener('change', () => { carregarResumoGlobal(); carregarTransacoes(1, true); });
+
+        function getHeadersSeguros(enviandoArquivo = false) { 
+            const headers = { 'Authorization': `Bearer ${tokenJWT}` };
+            if (!enviandoArquivo) headers['Content-Type'] = 'application/json';
+            return headers;
+        }
+
+        function mostrarToast(mensagem, tipo = 'sucesso') {
+            const corDeFundo = tipo === 'sucesso' ? '#10b981' : (tipo === 'aviso' ? '#f59e0b' : '#ef4444');
+            Toastify({ text: mensagem, duration: 3000, gravity: "top", position: "right", style: { background: corDeFundo, borderRadius: "8px", fontFamily: "Inter", fontWeight: "500" } }).showToast();
+        }
+
+        function aplicarIdioma() {
+            const textos = dicionario[idiomaAtual];
+            document.querySelectorAll('[data-i18n]').forEach(el => { const chave = el.getAttribute('data-i18n'); if (chave === 'btnTemaClaro' || chave === 'btnTemaEscuro') return; el.innerText = textos[chave]; });
+            document.querySelectorAll('[data-i18n-label]').forEach(el => { el.label = textos[el.getAttribute('data-i18n-label')]; });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = textos[el.getAttribute('data-i18n-placeholder')]; });
+            atualizarCategoriasNoForm();
+            if(tokenJWT) { carregarResumoGlobal(); carregarTransacoes(1, true); carregarMetas(); atualizarTextoBotaoTema(); }
+        }
+
+        document.getElementById('seletorIdioma').addEventListener('change', (evento) => { idiomaAtual = evento.target.value; localStorage.setItem('idiomaPreferido', idiomaAtual); aplicarIdioma(); });
+        document.getElementById('btnSair').addEventListener('click', () => { localStorage.removeItem('tokenJWT'); window.location.href = '/login.html'; });
+
+        const btnTema = document.getElementById('btnTema');
+        if (localStorage.getItem('temaPreferido') === 'dark') document.body.classList.add('dark');
+        function atualizarTextoBotaoTema() { btnTema.innerText = document.body.classList.contains('dark') ? dicionario[idiomaAtual].btnTemaClaro : dicionario[idiomaAtual].btnTemaEscuro; }
+        btnTema.addEventListener('click', () => { document.body.classList.toggle('dark'); localStorage.setItem('temaPreferido', document.body.classList.contains('dark') ? 'dark' : 'light'); atualizarTextoBotaoTema(); carregarResumoGlobal(); });
+
+        let grafico; 
+        
+        // --- NOVO: GRÁFICO DE BARRAS PROFISSIONAL ---
+        function atualizarGraficoBarras(despesasPorCategoria) {
+            const contexto = document.getElementById('meuGrafico').getContext('2d');
+            if (grafico) grafico.destroy();
+            const corTexto = getComputedStyle(document.body).getPropertyValue('--texto-principal').trim();
+            const textos = dicionario[idiomaAtual];
+
+            // Pega os nomes das categorias e traduz
+            const categoriasNomesOriginais = Object.keys(despesasPorCategoria);
+            const categoriasValores = Object.values(despesasPorCategoria);
+            const categoriasTraduzidas = categoriasNomesOriginais.map(cat => {
+                const chave = mapaTraducoesCat[cat];
+                return chave ? textos[chave] : textos.catSemCategoria;
+            });
+
+            // Se não tiver nenhum gasto no mês, mostramos vazio
+            if (categoriasNomesOriginais.length === 0) {
+                categoriasTraduzidas.push("Sem Custos");
+                categoriasValores.push(0);
+            }
+
+            grafico = new Chart(contexto, {
+                type: 'bar', // Mudou de 'doughnut' para 'bar'
+                data: {
+                    labels: categoriasTraduzidas,
+                    datasets: [{
+                        label: textos.cardSaidas,
+                        data: categoriasValores,
+                        backgroundColor: '#4f46e5', // Cor Azul Corporativa
+                        borderRadius: 6, // Bordas arredondadas na barra
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }, // Esconde a legenda
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { color: 'rgba(107, 114, 128, 0.1)' }, // Linhas de fundo suaves
+                            ticks: { color: corTexto } 
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            ticks: { color: corTexto, font: { size: 11 } } 
+                        }
+                    }
+                }
+            });
+        }
+
+        async function carregarResumoGlobal() {
+            try {
+                const url = `/resumo?mes=${selectMes.value}&ano=${selectAno.value}`;
+                const res = await fetch(url, { headers: getHeadersSeguros() });
+                if (!res.ok) return;
+                
+                // Agora o backend devolve as despesasPorCategoria!
+                const { totalReceitas, totalDespesas, despesasPorCategoria } = await res.json();
+                const textos = dicionario[idiomaAtual];
+                const saldoAtual = totalReceitas - totalDespesas;
+                
+                document.getElementById('txtArrecadado').innerText = `${textos.moeda} ${totalReceitas.toFixed(2)}`;
+                document.getElementById('txtGasto').innerText = `${textos.moeda} ${totalDespesas.toFixed(2)}`;
+                document.getElementById('txtSaldo').innerText = `${textos.moeda} ${saldoAtual.toFixed(2)}`;
+                document.getElementById('txtSaldo').style.color = saldoAtual >= 0 ? 'var(--texto-principal)' : 'var(--vermelho)';
+                
+                let margem = 0;
+                const lblMargem = document.getElementById('txtMargemLucro');
+                if (totalReceitas > 0) {
+                    margem = ((totalReceitas - totalDespesas) / totalReceitas) * 100;
+                    lblMargem.innerText = `${margem.toFixed(1)}%`;
+                    lblMargem.style.color = margem >= 0 ? 'var(--verde)' : 'var(--vermelho)';
+                } else { lblMargem.innerText = "0%"; lblMargem.style.color = "var(--texto-principal)"; }
+                
+                // Chama o novo Gráfico de Barras!
+                atualizarGraficoBarras(despesasPorCategoria);
+            } catch (erro) { console.error(erro); }
+        }
+
+        let paginaAtualGlobal = 1;
+
+        async function carregarTransacoes(pagina = 1, limparLista = true) {
+            try {
+                paginaAtualGlobal = pagina;
+                const categoriaFiltro = document.getElementById('filtroCategoria').value; 
+                
+                // Incluindo o Mês e Ano na requisição
+                const url = `/transacoes?page=${pagina}&categoria=${categoriaFiltro}&mes=${selectMes.value}&ano=${selectAno.value}`;
+                
+                const resposta = await fetch(url, { headers: getHeadersSeguros() });
+                if (!resposta.ok) { if (resposta.status === 401 || resposta.status === 403) { localStorage.removeItem('tokenJWT'); window.location.href = '/login.html'; } return; }
+
+                const dados = await resposta.json();
+                const transacoes = dados.transacoes;
+                const listaHTML = document.getElementById('listaTransacoes');
+                const btnCarregar = document.getElementById('btnCarregarMais');
+                const textos = dicionario[idiomaAtual];
+
+                if (limparLista) listaHTML.innerHTML = ''; 
+
+                transacoes.forEach(t => {
+                    const isReceita = t.tipo === 'receita';
+                    const classeCor = isReceita ? 'receita' : 'despesa';
+                    const sinal = isReceita ? '+' : '-';
+                    const chaveDaCategoria = mapaTraducoesCat[t.categoria];
+                    const categoriaTexto = chaveDaCategoria ? textos[chaveDaCategoria] : textos.catSemCategoria;
+                    const htmlFoto = t.comprovante ? `<a href="${t.comprovante}" target="_blank" title="Ver Recibo"><img src="${t.comprovante}" class="miniatura-foto"></a>` : '';
+
+                    listaHTML.innerHTML += `
+                        <li class="item">
+                            <div class="info-principal-item">
+                                ${htmlFoto}
+                                <div>
+                                    <span class="item-titulo">${t.descricao} <span class="tag-categoria">${categoriaTexto}</span></span>
+                                    <span class="item-data">${isReceita ? textos.lblEntrada : textos.lblSaida}</span>
+                                </div>
+                            </div>
+                            <div class="item-acoes">
+                                <span class="valor ${classeCor}">${sinal} ${textos.moeda} ${t.valor.toFixed(2)}</span>
+                                <button onclick="deletarTransacao('${t._id}')" class="btn-deletar">✕</button>
+                            </div>
+                        </li>
+                    `;
+                });
+
+                if (transacoes.length === 0 && pagina === 1) listaHTML.innerHTML = `<li class="item" style="justify-content: center; color: var(--texto-secundario);">${textos.msgSemTransacao}</li>`;
+                if (dados.paginaAtual < dados.totalPaginas) { btnCarregar.style.display = 'block'; } else { btnCarregar.style.display = 'none'; }
+            } catch (erro) { mostrarToast("Erro de conexão", "erro"); }
+        }
+
+        document.getElementById('btnCarregarMais').addEventListener('click', () => { carregarTransacoes(paginaAtualGlobal + 1, false); });
+        
+        async function deletarTransacao(id) { 
+            await fetch(`/transacoes/${id}`, { method: 'DELETE', headers: getHeadersSeguros() }); 
+            mostrarToast(dicionario[idiomaAtual].msgSucesso, 'sucesso');
+            carregarResumoGlobal(); carregarTransacoes(1, true); 
+        }
+
+        document.getElementById('btnAdd').addEventListener('click', async () => {
+            const btn = document.getElementById('btnAdd');
+            const textos = dicionario[idiomaAtual];
+            try {
+                const descricao = document.getElementById('descricao').value;
+                const valor = document.getElementById('valor').value; 
+                const tipo = document.getElementById('tipo').value;
+                const categoria = document.getElementById('categoria').value; 
+                const inputFoto = document.getElementById('comprovante'); 
+
+                if(!descricao || !valor || !categoria) { mostrarToast(textos.msgAviso, "aviso"); return; }
+
+                btn.disabled = true;
+                btn.innerText = textos.btnCarregando;
+
+                const formEmpacotado = new FormData();
+                formEmpacotado.append('descricao', descricao); formEmpacotado.append('valor', valor); formEmpacotado.append('tipo', tipo); formEmpacotado.append('categoria', categoria);
+                if (inputFoto.files[0]) formEmpacotado.append('comprovante', inputFoto.files[0]);
+
+                const resposta = await fetch('/transacoes', { method: 'POST', headers: getHeadersSeguros(true), body: formEmpacotado });
+                if (!resposta.ok) { const dadosErro = await resposta.json(); mostrarToast("Erro: " + (dadosErro.erro || "Desconhecido"), "erro"); return; }
+                
+                document.getElementById('formTransacao').reset();
+                atualizarCategoriasNoForm(); 
+                
+                // MÁGICA: Ao registrar uma transação nova, garantimos que o filtro de data pula para o mês atual!
+                selectMes.value = new Date().getMonth() + 1;
+                selectAno.value = new Date().getFullYear();
+
+                carregarResumoGlobal();
+                carregarTransacoes(1, true); 
+                mostrarToast(textos.msgSucesso, 'sucesso');
+            } catch(erro) { 
+                mostrarToast("Erro de conexão.", "erro"); 
+            } finally {
+                btn.disabled = false;
+                btn.innerText = textos.btnAdicionar;
+            }
+        });
+
+        document.getElementById('btnExportarCsv').addEventListener('click', async () => {
+            const btn = document.getElementById('btnExportarCsv');
+            const textos = dicionario[idiomaAtual];
+            const textoOriginal = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `⏳ ${textos.btnCarregando}`;
+
+                const resposta = await fetch(`/transacoes?page=1&limit=10000&mes=${selectMes.value}&ano=${selectAno.value}`, { headers: getHeadersSeguros() });
+                const dados = await resposta.json();
+                
+                if (dados.transacoes.length === 0) { mostrarToast(textos.msgErroExportar, "aviso"); return; }
+
+                let csvContent = "Descricao,Categoria,Tipo,Valor\n";
+                dados.transacoes.forEach(t => { let desc = t.descricao.replace(/,/g, " "); csvContent += `${desc},${t.categoria},${t.tipo},${t.valor}\n`; });
+
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `relatorio_financeiro_mes${selectMes.value}.csv`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                mostrarToast(textos.msgSucesso, 'sucesso');
+            } catch (erro) {
+                mostrarToast("Erro al exportar", "erro");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = textoOriginal;
+            }
+        });
+
+        // Mantém código das Metas idêntico...
+        async function carregarMetas() {
+            try {
+                const res = await fetch(`/metas`, { headers: getHeadersSeguros() });
+                if (!res.ok) return;
+                const metas = await res.json();
+                const container = document.getElementById('listaMetas');
+                const textos = dicionario[idiomaAtual];
+                container.innerHTML = '';
+                if(metas.length === 0) { container.innerHTML = `<p style="text-align:center; color: var(--texto-secundario);">${textos.msgSemMetas}</p>`; return; }
+                metas.forEach(meta => {
+                    let porcentagem = (meta.valorAtual / meta.valorAlvo) * 100; if(porcentagem > 100) porcentagem = 100;
+                    container.innerHTML += `
+                        <div class="meta-card">
+                            <div class="meta-header">
+                                <strong>${meta.nome}</strong>
+                                <div class="meta-botoes">
+                                    <button onclick="adicionarDinheiroMeta('${meta._id}', ${meta.valorAtual})" class="btn-acao-meta">${textos.btnGuardar}</button>
+                                    <button onclick="editarMeta('${meta._id}', '${meta.nome}', ${meta.valorAlvo})" class="btn-acao-meta">${textos.btnEditar}</button>
+                                    <button onclick="deletarMeta('${meta._id}')" class="btn-deletar" style="width: auto; padding: 0 10px;">✕</button>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 500;">
+                                <span>${textos.moeda} ${meta.valorAtual.toFixed(2)} / ${textos.moeda} ${meta.valorAlvo.toFixed(2)}</span>
+                                <span>${porcentagem.toFixed(1)}%</span>
+                            </div>
+                            <div class="barra-fundo"><div class="barra-progresso" style="width: ${porcentagem}%"></div></div>
+                        </div>
+                    `;
+                });
+            } catch (erro) { console.error(erro); }
+        }
+        document.getElementById('btnNovaMeta').addEventListener('click', async () => { const nome = prompt("Nome da meta:"); if(!nome) return; const valorAlvo = parseFloat(prompt("Valor alvo:")); if(!valorAlvo || isNaN(valorAlvo)) return; await fetch('/metas', { method: 'POST', headers: getHeadersSeguros(), body: JSON.stringify({ nome, valorAlvo }) }); mostrarToast(dicionario[idiomaAtual].msgSucesso); carregarMetas(); });
+        window.editarMeta = async function(id, nomeAtual, valorAlvoAtual) { const novoNome = prompt("Novo nome:", nomeAtual); if(!novoNome) return; const novoValor = parseFloat(prompt("Novo valor:", valorAlvoAtual)); if(!novoValor || isNaN(novoValor)) return; await fetch(`/metas/${id}`, { method: 'PUT', headers: getHeadersSeguros(), body: JSON.stringify({ nome: novoNome, valorAlvo: novoValor }) }); mostrarToast(dicionario[idiomaAtual].msgSucesso); carregarMetas(); };
+        window.adicionarDinheiroMeta = async function(id, saldoAtual) { const quantia = parseFloat(prompt("Valor a adicionar:")); if(!quantia || isNaN(quantia)) return; await fetch(`/metas/${id}`, { method: 'PUT', headers: getHeadersSeguros(), body: JSON.stringify({ valorAtual: saldoAtual + quantia }) }); mostrarToast(dicionario[idiomaAtual].msgSucesso); carregarMetas(); };
+        window.deletarMeta = async function(id) { await fetch(`/metas/${id}`, { method: 'DELETE', headers: getHeadersSeguros() }); mostrarToast(dicionario[idiomaAtual].msgSucesso); carregarMetas(); };
+
+        aplicarIdioma();
+    </script>
+</body>
+</html>
